@@ -1,7 +1,6 @@
 # subprocess_manager
-The subprocess_manager library provides a simple and convenient way to manage subprocesses in C++. It allows you to easily create, start, and monitor subprocesses, as well as retrieve their output and return codes.
+The subprocess_manager library provides a simple and convenient way to manage subprocesses in C++. It allows you to easily create, start, and monitor subprocesses asynchronously, as well as retrieve their output and return codes.
 ## Usage
-The subprocess_manager library provides a simple and convenient way to manage subprocesses in C++. It allows you to easily create, start, and monitor subprocesses, as well as retrieve their output and return codes.
 
 ```cpp
 #include <subprocess_manager.h>
@@ -16,14 +15,18 @@ int main() {
   // Start the subprocesses
   manager.start();
 
-  // Wait for the subprocesses to complete
-  while(manager.active);
+  // Get process id
+  std::cout << "Process Id  : " << manager["my_subprocess"]->m_process_id << std::endl;
 
-  // Get the output from the subprocesses
-  for (const auto& process : manager.processes()) {
-    std::cout << process->output() << std::endl;
+  // Wait for the subprocesses to complete or do something else
+  while(manager.m_active);
+
+  // Get the return code and output from the subprocesses
+  std::cout << "Return code : " << manager["my_subprocess"]->m_return_code << std::endl;
+  std::cout << "Output      : " << std::endl;
+  for(std::string line:manager["my_subprocess"]->m_output()){
+    std::cout << line << std::endl;
   }
-
   return 0;
 }
 ```
