@@ -89,7 +89,7 @@ void Subprocess::start(){
     // update process id
     this->m_process_id = this->m_pi.dwProcessId;
     // initiate monitor thread to monitor the process
-    this->p_monitor_thread = new std::thread(std::bind(Subprocess::monitor, this));
+    this->p_monitor_thread = new std::thread(std::bind(&Subprocess::monitor, this));
 }
 
 void Subprocess::monitor()
@@ -126,17 +126,18 @@ SubprocessManager::SubprocessManager(){
 SubprocessManager::~SubprocessManager(){
     for(const auto& _pair:this->m_processes){
         delete _pair.second;
-    )
+    }
     if(this->p_monitor_thread != nullptr){
         if(this->p_monitor_thread->joinable()){
             this->p_monitor_thread->join();
         }
         delete this->p_monitor_thread;
-    )
+    }
 }
-void SubprocessManager::add(std::string name, std::string command, std::string curr_directory){
+void SubprocessManager::add(std::string name, std::string command, std::string curr_directory)
+{
     if(this->m_processes.find(name) != this->m_processes.end()){
-        throw std::runtime_error(std::format("Duplicate task found('{0}')",name);
+        throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
     }
     this->m_processes[name] = new Subprocess(command,curr_directory);
     this->m_process_names.push_back(name);
@@ -156,7 +157,7 @@ void SubprocessManager::start(){
     for(const auto& _pair:this->m_processes){
         _pair.second->start();
     }
-    this->p_monitor_thread = new std::thread(std::bind(SubprocessManager::monitor, this));
+    this->p_monitor_thread = new std::thread(std::bind(&SubprocessManager::monitor, this));
 }
 void SubprocessManager::monitor(){
     while(true){
