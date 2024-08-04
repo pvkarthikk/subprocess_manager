@@ -7,9 +7,9 @@ using namespace std;
 /** @brief get current time */
 string get_time(){
     time_t _time = time(NULL);
-    struct tm _tm = *localtime(&t);
+    struct tm _tm = *localtime(&_time);
     char message[100];
-    sprintf(message,"%d-%02d-%02d %02d:%02d:%02d\n",
+    sprintf(message,"%d-%02d-%02d %02d:%02d:%02d",
         _tm.tm_year + 1900,
         _tm.tm_mon  + 1,
         _tm.tm_mday,
@@ -21,7 +21,7 @@ string get_time(){
 }
 int main(int argc, char** argv){
     // task.exe <count> <sleep> <exit_code>
-    if(argc == 4){
+    if(argc != 4){
         cerr << "Invalid no of commands" << endl;
         cerr << "task.exe <count> <sleep> <exit_code>" << endl;
     }

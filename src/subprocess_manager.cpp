@@ -1,5 +1,6 @@
 #include <subprocess_manager.h>
 #include <format>
+#include <functional>
 using namespace subprocess_manager;
 Subprocess::Subprocess(std::string command, std::string curr_directory)
 {
@@ -63,7 +64,7 @@ void Subprocess::start(){
     // Replace with your desired command
     LPSTR lpCmdline = const_cast<char *>(this->m_command.c_str());
     LPSTR lpCurrDir = NULL;
-    if(this->m_c != ""){
+    if(this->m_curr_directory != ""){
         lpCurrDir = const_cast<char*>(this->m_curr_directory.c_str());
     }
     if (!CreateProcess(
@@ -82,8 +83,11 @@ void Subprocess::start(){
         // Handle error
         throw std::runtime_error("Unable to create process");
     }
+    // Close handle to the write end of the pipe.
+    // No longer needed by the parent process.
+    CloseHandle(this->m_hWrite);
     // update process id
-    this->m_process_id = this->pi.dwProcessId;
+    this->m_process_id = this->m_pi.dwProcessId;
     // initiate monitor thread to monitor the process
     this->p_monitor_thread = new std::thread(std::bind(Subprocess::monitor, this));
 }
@@ -93,7 +97,7 @@ void Subprocess::monitor()
     while (true) {
         DWORD exitCode;
         if (!GetExitCodeProcess(this->m_pi.hProcess, &exitCode)) {
-            std::cerr << "Error getting exit code for process " << this->m_pi.dwProcessId << std::endl;
+            this->m_return_code = -2;
             break;
         }
 
@@ -115,7 +119,7 @@ void Subprocess::monitor()
 SubprocessManager::SubprocessManager(){
     this->m_active =false;
     this->m_started = false;
-    this->m_monitor_thread = NULL;
+    this->p_monitor_thread = NULL;
     this->m_process_names = {};
     this->m_processes = {};
 }
@@ -123,15 +127,15 @@ SubprocessManager::~SubprocessManager(){
     for(const auto& _pair:this->m_processes){
         delete _pair.second;
     )
-    if(this->m_monitor_thread != nullptr){
-        if(this->m_monitor_thread->joinable()){
-            this->m_monitor_thread->join();
+    if(this->p_monitor_thread != nullptr){
+        if(this->p_monitor_thread->joinable()){
+            this->p_monitor_thread->join();
         }
-        delete this->m_monitor_thread;
+        delete this->p_monitor_thread;
     )
 }
 void SubprocessManager::add(std::string name, std::string command, std::string curr_directory){
-    if(this->m_processes.find(name) == this->m_processes.end()){
+    if(this->m_processes.find(name) != this->m_processes.end()){
         throw std::runtime_error(std::format("Duplicate task found('{0}')",name);
     }
     this->m_processes[name] = new Subprocess(command,curr_directory);
@@ -150,15 +154,15 @@ void SubprocessManager::start(){
     this->m_started = true;
     this->m_active  = true;
     for(const auto& _pair:this->m_processes){
-        _pair->second->start();
+        _pair.second->start();
     }
-    this->m_monitor_thread = new std::thread(std::bind(SubprocessManager::monitor, this));
+    this->p_monitor_thread = new std::thread(std::bind(SubprocessManager::monitor, this));
 }
 void SubprocessManager::monitor(){
     while(true){
         bool _all_done = true;    
         for(const auto& _pair:this->m_processes){
-            if(_pair->second->m_active){
+            if(_pair.second->m_active){
                 _all_done = false;
             }
         }
