@@ -23,4 +23,9 @@ target_include_directories(unittest PRIVATE
 target_link_libraries(unittest subprocess_manager
 )
 
+# enable testing functionality
+enable_testing()
+
+add_test(NAME Subprocess COMMAND unittest --filter=Subprocess.*)
+add_test(NAME SubprocessManager COMMAND unittest --filter=SubprocessManager.*)
 
