@@ -10,10 +10,7 @@ add_library(subprocess_manager STATIC
 target_include_directories(subprocess_manager PRIVATE
     include
 )
-# unittest and resources
-add_executable(task 
-    test/task.cpp
-)
+# unittest
 add_executable(unittest 
     test/test_subprocess_manager.cpp
 )
