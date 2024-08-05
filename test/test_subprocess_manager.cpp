@@ -10,7 +10,7 @@ std::string get_exe_path(){
     return std::string(buffer);
 }
 
-string get_time(){
+std::string get_time(){
     time_t _time = time(NULL);
     struct tm _tm = *localtime(&_time);
     char message[100];
@@ -22,7 +22,7 @@ string get_time(){
         _tm.tm_min,
         _tm.tm_sec
     );
-    return string(message);
+    return std::string(message);
 }
 UTEST(Task, Task)
 {
@@ -32,7 +32,7 @@ UTEST(Task, Task)
     }
     EXPECT_EQ(0, 0);
 }
-std::string task_cmd = std::format("{0} --filter=Task.Task",get_exe_path())
+std::string task_cmd = std::format("{0} --filter=Task.Task",get_exe_path());
 UTEST(Subprocess, SingleProcess)
 {
     Subprocess *process1 = new Subprocess(task_cmd);
