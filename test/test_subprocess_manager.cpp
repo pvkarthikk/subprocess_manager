@@ -37,7 +37,6 @@ UTEST(Subprocess, SingleProcess)
 {
     Subprocess *process1 = new Subprocess(task_cmd);
     process1->start();
-    while(process1->m_active);
     EXPECT_EQ(process1->m_return_code, 0);
     delete process1;
 }
@@ -45,9 +44,9 @@ UTEST(Subprocess, SingleProcess)
 UTEST(Subprocess, TwoProcess)
 {
     Subprocess *process1 = new Subprocess(task_cmd);
-    Subprocess *process2 = new Subprocess("task.exe 1 100 2");
-    process1->start();
-    process2->start();
+    Subprocess *process2 = new Subprocess(task_cmd);
+    process1->start_async();
+    process2->start_async();
     while(true){
         if(!process1->m_active && !process2->m_active){
             break;
@@ -71,7 +70,6 @@ UTEST(SubprocessManager, SingleProcess)
     SubprocessManager manager;
     manager.add("task1", task_cmd);
     manager.start();
-    while(manager.m_active);
     EXPECT_EQ(manager["task1"]->m_return_code, 0);
 }
 UTEST(SubprocessManager, TwoProcess)
@@ -80,7 +78,6 @@ UTEST(SubprocessManager, TwoProcess)
     manager.add("task1", task_cmd);
     manager.add("task2", "task.exe 1 100 2");
     manager.start();
-    while(manager.m_active);
     EXPECT_EQ(manager["task1"]->m_return_code, 0);
     EXPECT_EQ(manager["task2"]->m_return_code, 0);
 }

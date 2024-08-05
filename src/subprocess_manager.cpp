@@ -31,6 +31,15 @@ Subprocess::~Subprocess(){
     }
 }
 void Subprocess::start(){
+    this->execute();
+    this->monitor();
+}
+void Subprocess::start_async(){
+    this->execute();
+    // initiate monitor thread to monitor the process
+    this->p_monitor_thread = new std::thread(std::bind(&Subprocess::monitor, this));
+}
+void Subprocess::execute(){
     if(this->m_started){
         throw std::runtime_error(std::format("'{0}' already running",this->m_command));
     }
@@ -91,8 +100,6 @@ void Subprocess::start(){
     CloseHandle(this->m_hWrite);
     // update process id
     this->m_process_id = this->m_pi.dwProcessId;
-    // initiate monitor thread to monitor the process
-    this->p_monitor_thread = new std::thread(std::bind(&Subprocess::monitor, this));
 }
 
 void Subprocess::monitor()
@@ -151,6 +158,14 @@ SubprocessManager::~SubprocessManager(){
         delete this->p_monitor_thread;
     }
 }
+void SubprocessManager::add(std::string name, Subprocess* process)
+{
+    if(this->m_processes.find(name) != this->m_processes.end()){
+        throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
+    }
+    this->m_processes[name] = process;
+    this->m_process_names.push_back(name);
+}
 void SubprocessManager::add(std::string name, std::string command, std::string curr_directory, std::string log_path)
 {
     if(this->m_processes.find(name) != this->m_processes.end()){
@@ -166,6 +181,14 @@ Subprocess* SubprocessManager::operator[](std::string name){
     return this->m_processes[name];
 }
 void SubprocessManager::start(){
+    this->execute();
+    this->monitor();
+}
+void SubprocessManager::start_async(){
+    this->execute();
+    this->p_monitor_thread = new std::thread(std::bind(&SubprocessManager::monitor, this));
+}
+void SubprocessManager::execute(){
     if(this->m_started){
         throw std::runtime_error("Manager already started");
     }
@@ -174,7 +197,6 @@ void SubprocessManager::start(){
     for(const auto& _pair:this->m_processes){
         _pair.second->start();
     }
-    this->p_monitor_thread = new std::thread(std::bind(&SubprocessManager::monitor, this));
 }
 void SubprocessManager::monitor(){
     while(true){
