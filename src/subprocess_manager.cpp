@@ -1,11 +1,14 @@
 #include <subprocess_manager.h>
 #include <format>
 #include <functional>
+#include <iostream>
+#include <fstream>
 using namespace subprocess_manager;
-Subprocess::Subprocess(std::string command, std::string curr_directory)
+Subprocess::Subprocess(std::string command, std::string curr_directory, std::string log_path)
 {
     this->m_command = command;
     this->m_curr_directory = curr_directory;
+    this->m_log_path = log_path;
     this->m_started = false;
     this->m_active = false;
     this->m_process_id = -1;
@@ -94,6 +97,11 @@ void Subprocess::start(){
 
 void Subprocess::monitor()
 {
+    std::ofstream log_file;
+    // if log is specified, open the log file
+    if(this->m_log_path != ""){
+        log_file.open(this->m_log_path); 
+    }
     while (true) {
         DWORD exitCode;
         if (!GetExitCodeProcess(this->m_pi.hProcess, &exitCode)) {
@@ -110,9 +118,18 @@ void Subprocess::monitor()
         DWORD dwRead;
         while (ReadFile(this->m_hRead, buffer, sizeof(buffer) - 1, &dwRead, NULL) && dwRead != 0) {
             buffer[dwRead] = '\0';
+            // add current buffer to output stream
             this->m_output.push_back(std::string(buffer));
+            // if log is specified, write to log file
+            if(this->m_log_path != ""){
+                log_file << std::string(buffer);
+            }
         }
         Sleep(100); // Adjust the sleep interval as needed
+    }
+    // If log is specified, close the log file
+    if(this->m_log_path != ""){
+        log_file.close();
     }
     this->m_active = false;
 }
@@ -134,12 +151,12 @@ SubprocessManager::~SubprocessManager(){
         delete this->p_monitor_thread;
     }
 }
-void SubprocessManager::add(std::string name, std::string command, std::string curr_directory)
+void SubprocessManager::add(std::string name, std::string command, std::string curr_directory, std::string log_path)
 {
     if(this->m_processes.find(name) != this->m_processes.end()){
         throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
     }
-    this->m_processes[name] = new Subprocess(command,curr_directory);
+    this->m_processes[name] = new Subprocess(command,curr_directory,log_path);
     this->m_process_names.push_back(name);
 }
 Subprocess* SubprocessManager::operator[](std::string name){

@@ -19,6 +19,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             bool                                        m_started;          // Flag indicating if the process has started
             std::string                                 m_command;          // Command to be executed
             std::string                                 m_curr_directory;   // Current working directory of the process
+            std::string                                 m_log_path;         // Log file path
             // apis
             void                                        monitor();          // Function to monitor process output
         public:
@@ -29,7 +30,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             std::vector<std::string>                    m_output;           // Vector to store process output lines
             // apis
             void                                        start();            // Function to start the process
-            Subprocess(std::string command, std::string curr_directory="");    // Constructor
+            Subprocess(std::string command, std::string curr_directory="", std::string log_path="");    // Constructor
             ~Subprocess();                                                  // Destructor
     };
 
@@ -47,7 +48,10 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             bool                                        m_active;           // Flag indicating if the manager is active
             void                                        start();            // Function to start the manager and its subprocesses
             Subprocess*                                 operator[](std::string name); // Access a subprocess by name
-            void                                        add(std::string name, std::string command, std::string curr_directory=""); // Add a subprocess
+            void                                        add(std::string name,
+                                                            std::string command,
+                                                            std::string curr_directory="",
+                                                            std::string log_path=""); // Add a subprocess
             SubprocessManager();                                            // Constructor
             ~SubprocessManager();                                           // Destructor
     };
