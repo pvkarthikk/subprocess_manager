@@ -76,7 +76,7 @@ UTEST(SubprocessManager, TwoProcess)
 {
     SubprocessManager manager;
     manager.add("task1", task_cmd);
-    manager.add("task2", "task.exe 1 100 2");
+    manager.add("task2", task_cmd);
     manager.start();
     EXPECT_EQ(manager["task1"]->m_return_code, 0);
     EXPECT_EQ(manager["task2"]->m_return_code, 0);

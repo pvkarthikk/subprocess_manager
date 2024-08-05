@@ -5,7 +5,7 @@
 #include <vector>               // For dynamic arrays
 #include <thread>               // For multithreading
 #include <unordered_map>        // For efficient key-value storage
-#include <chrono>               // For time-related operations
+#include <ctime>                // For time-related operations
 
 namespace subprocess_manager {  // Namespace to encapsulate subprocess management functionality
 
@@ -22,7 +22,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             std::string                                 m_curr_directory;   // Current working directory of the process
             std::string                                 m_log_path;         // Log file path
             bool                                        m_monitor_flag;     // Flag to enable monitoring
-            auto                                        m_start_time;       // Start time of the process
+            clock_t                                     m_start_time;       // Start time of the process
             // apis
             void                                        monitor();          // Function to monitor process output
             void                                        execute();          // Function to execute process
@@ -32,7 +32,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             int                                         m_return_code;      // Return code of the process
             bool                                        m_active;           // Flag indicating if the process is active
             std::vector<std::string>                    m_output;           // Vector to store process output lines
-            auto                                        m_duration;         // Duration of the process
+            double                                      m_duration;         // Duration of the process
             // apis
             void                                        start();            // Function to start the process
             void                                        start_async();      // Function to start the process asynchronosly
