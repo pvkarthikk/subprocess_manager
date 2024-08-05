@@ -73,3 +73,7 @@ The subprocess_manager library provides the following classes and functions:
 - **operator[]**: Returns a reference to the subprocess with the given name.
 - **terminate**: Terminates all of the subprocesses in the manager.
 
+## External Libraries
+The subprocess_manager library relies on the following external libraries:
+
+- **[utest](https://github.com/sheredom/utest.h):** A lightweight unit testing framework used to ensure the reliability and correctness of this project.

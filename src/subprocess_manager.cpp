@@ -44,6 +44,7 @@ void Subprocess::execute(){
     if(this->m_started){
         throw std::runtime_error(std::format("'{0}' already running",this->m_command));
     }
+    this->m_start_time = std::chrono::high_resolution_clock::now();
     this->m_started = true;
     this->m_active = true;
     this->m_output = {};
@@ -141,6 +142,8 @@ void Subprocess::monitor()
     if(this->m_log_path != ""){
         log_file.close();
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    this->m_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - this->m_start_time).count();
     this->m_monitor_flag = false;
     this->m_active = false;
 }
