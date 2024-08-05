@@ -20,6 +20,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             std::string                                 m_command;          // Command to be executed
             std::string                                 m_curr_directory;   // Current working directory of the process
             std::string                                 m_log_path;         // Log file path
+            bool                                        m_monitor_flag;     // Flag to enable monitoring
             // apis
             void                                        monitor();          // Function to monitor process output
             void                                        execute();          // Function to execute process
@@ -32,6 +33,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             // apis
             void                                        start();            // Function to start the process
             void                                        start_async();      // Function to start the process asynchronosly
+            void                                        terminate();        // Function to terminate the process
             Subprocess(std::string command, std::string curr_directory="", std::string log_path="");    // Constructor
             ~Subprocess();                                                  // Destructor
     };
@@ -43,6 +45,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             SubprocessMap                               m_processes;        // Map to store subprocesses by name
             bool                                        m_started;          // Flag indicating if the manager has started
             std::thread*                                p_monitor_thread;   // Pointer to the monitoring thread
+            bool                                        m_monitor_flag;     // Flag to enable monitoring
             void                                        monitor();          // Function to monitor subprocesses
             void                                        execute();          // Function to execute subprocesses
         public:
@@ -50,6 +53,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             bool                                        m_active;           // Flag indicating if the manager is active
             void                                        start();            // Function to start the manager and its subprocesses
             void                                        start_async();      // Function to start the manager and its subprocesses asynchronously
+            void                                        terminate();        // Function to terminate all subprocesses
             Subprocess*                                 operator[](std::string name); // Access a subprocess by name
             void                                        add(std::string name, Subprocess* process); // Add a subprocess
             void                                        add(std::string name,

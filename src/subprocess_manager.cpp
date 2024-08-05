@@ -15,6 +15,7 @@ Subprocess::Subprocess(std::string command, std::string curr_directory, std::str
     this->m_return_code = -1;
     this->p_monitor_thread = nullptr;
     this->m_output = {};
+    this->m_monitor_flag = false;
     ZeroMemory(&this->m_pi, sizeof(this->m_pi));
     ZeroMemory(&this->m_si, sizeof(this->m_si));
 }
@@ -100,6 +101,8 @@ void Subprocess::execute(){
     CloseHandle(this->m_hWrite);
     // update process id
     this->m_process_id = this->m_pi.dwProcessId;
+    // start monitoring
+    this->m_monitor_flag = true;
 }
 
 void Subprocess::monitor()
@@ -109,7 +112,7 @@ void Subprocess::monitor()
     if(this->m_log_path != ""){
         log_file.open(this->m_log_path); 
     }
-    while (true) {
+    while (this->m_monitor_flag) {
         DWORD exitCode;
         if (!GetExitCodeProcess(this->m_pi.hProcess, &exitCode)) {
             this->m_return_code = -2;
@@ -138,11 +141,22 @@ void Subprocess::monitor()
     if(this->m_log_path != ""){
         log_file.close();
     }
+    this->m_monitor_flag = false;
     this->m_active = false;
+}
+void Subprocess::terminate(){
+    this->m_monitor_flag = false;
+    if(this->p_monitor_thread != nullptr){
+        if(this->p_monitor_thread->joinable()){
+            this->p_monitor_thread->join();
+        }
+        delete this->p_monitor_thread;
+    }
 }
 SubprocessManager::SubprocessManager(){
     this->m_active =false;
     this->m_started = false;
+    this->m_monitor_flag = false;
     this->p_monitor_thread = NULL;
     this->m_process_names = {};
     this->m_processes = {};
@@ -195,11 +209,12 @@ void SubprocessManager::execute(){
     this->m_started = true;
     this->m_active  = true;
     for(const auto& _pair:this->m_processes){
-        _pair.second->start();
+        _pair.second->start_async();
     }
+    this->m_monitor_flag = true;
 }
 void SubprocessManager::monitor(){
-    while(true){
+    while(this->m_monitor_flag){
         bool _all_done = true;    
         for(const auto& _pair:this->m_processes){
             if(_pair.second->m_active){
@@ -212,4 +227,17 @@ void SubprocessManager::monitor(){
         Sleep(100); 
     }
     this->m_active = false;
+    this->m_monitor_flag = false;
+}
+void SubprocessManager::terminate(){
+    this->m_monitor_flag = false;
+    for(const auto& _pair:this->m_processes){
+        _pair.second->terminate();
+    }
+    if(this->p_monitor_thread != nullptr){
+        if(this->p_monitor_thread->joinable()){
+            this->p_monitor_thread->join();
+        }
+        delete this->p_monitor_thread;
+    }
 }
