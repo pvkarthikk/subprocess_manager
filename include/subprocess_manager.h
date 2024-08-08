@@ -37,6 +37,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             void                                        start();            // Function to start the process
             void                                        start_async();      // Function to start the process asynchronosly
             void                                        terminate();        // Function to terminate the process
+            void                                        join();             // Function to join the monitoring thread
             Subprocess(std::string command, std::string curr_directory="", std::string log_path="");    // Constructor
             ~Subprocess();                                                  // Destructor
     };
@@ -57,6 +58,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             void                                        start();            // Function to start the manager and its subprocesses
             void                                        start_async();      // Function to start the manager and its subprocesses asynchronously
             void                                        terminate();        // Function to terminate all subprocesses
+            void                                        join();             // Function to join the monitoring thread
             Subprocess*                                 operator[](std::string name); // Access a subprocess by name
             void                                        add(std::string name, Subprocess* process); // Add a subprocess
             void                                        add(std::string name,

@@ -63,6 +63,7 @@ The subprocess_manager library provides the following classes and functions:
 - **start()**: Starts the subprocess.
 - **start_async()**: Starts the subprocess asynchronously.
 - **terminate**: Terminates the subprocess.
+- **join**: Waits for the subprocess to complete.
 
 ### SubprocessManager
 - **SubprocessManager**: Manages a collection of subprocesses.
@@ -72,6 +73,7 @@ The subprocess_manager library provides the following classes and functions:
 - **start_async()**: Starts all of the subprocesses in the manager asynchronously.
 - **operator[]**: Returns a reference to the subprocess with the given name.
 - **terminate**: Terminates all of the subprocesses in the manager.
+- **join**: Waits for all of the subprocesses in the manager to complete.
 
 ## External Libraries
 The subprocess_manager library relies on the following external libraries:

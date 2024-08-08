@@ -95,7 +95,7 @@ void Subprocess::execute(){
         )
     ) {
         // Handle error
-        throw std::runtime_error("Unable to create process");
+        throw std::runtime_error(std::format("Unable to create process '{0}'",lpCmdline));
     }
     // Close handle to the write end of the pipe.
     // No longer needed by the parent process.
@@ -112,7 +112,6 @@ void Subprocess::monitor()
     // if log is specified, open the log file
     if(this->m_log_path != ""){
         log_file.open(this->m_log_path); 
-        log_file.close();
     }
     while (this->m_monitor_flag) {
         DWORD exitCode;
@@ -131,22 +130,30 @@ void Subprocess::monitor()
         while (ReadFile(this->m_hRead, buffer, sizeof(buffer) - 1, &dwRead, NULL) && dwRead != 0) {
             buffer[dwRead] = '\0';
             std::string out_str = std::string(buffer);
+            out_str.pop_back();
             // add current buffer to output stream
             this->m_output.push_back(out_str);
             // if log is specified, write to log file
             if(this->m_log_path != ""){
-                out_str.pop_back();
-                log_file.open(this->m_log_path,std::ios::app);
                 log_file << std::string(buffer);
-                log_file.close();
+                log_file.flush();
             }
         }
-        Sleep(100); // Adjust the sleep interval as needed
+    }
+    if(this->m_log_path != ""){
+        log_file.close();
     }
     auto end = clock();
     this->m_duration = double(this->m_start_time - end)/CLOCKS_PER_SEC ;
     this->m_monitor_flag = false;
     this->m_active = false;
+}
+void Subprocess::join(){
+    if(this->p_monitor_thread != nullptr){
+        if(this->p_monitor_thread->joinable()){
+            this->p_monitor_thread->join();
+        }
+    }
 }
 void Subprocess::terminate(){
     this->m_monitor_flag = false;
@@ -155,6 +162,7 @@ void Subprocess::terminate(){
             this->p_monitor_thread->join();
         }
         delete this->p_monitor_thread;
+        this->p_monitor_thread = nullptr;
     }
 }
 SubprocessManager::SubprocessManager(){
@@ -233,11 +241,21 @@ void SubprocessManager::monitor(){
     this->m_active = false;
     this->m_monitor_flag = false;
 }
+void SubprocessManager::join(){
+    for(const auto& _pair:this->m_processes){
+        _pair.second->join();
+    }
+    if(this->p_monitor_thread != nullptr){
+        if(this->p_monitor_thread->joinable()){
+            this->p_monitor_thread->join();
+        }
+        delete this->p_monitor_thread;
+        this->p_monitor_thread = nullptr;
+    }
+}
 void SubprocessManager::terminate(){
     this->m_monitor_flag = false;
-    for(const auto& _pair:this->m_processes){
-        _pair.second->terminate();
-    }
+    this->join();
     if(this->p_monitor_thread != nullptr){
         if(this->p_monitor_thread->joinable()){
             this->p_monitor_thread->join();
