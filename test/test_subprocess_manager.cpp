@@ -40,7 +40,13 @@ UTEST(Subprocess, SingleProcess)
     EXPECT_EQ(process1->m_return_code, 0);
     delete process1;
 }
-
+UTEST(Subprocess, SingleProcessWithLog)
+{
+    Subprocess *process1 = new Subprocess(task_cmd,"","log.txt");
+    process1->start();
+    EXPECT_EQ(process1->m_return_code, 0);
+    delete process1;
+}
 UTEST(Subprocess, TwoProcess)
 {
     Subprocess *process1 = new Subprocess(task_cmd);

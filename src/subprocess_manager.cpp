@@ -112,6 +112,7 @@ void Subprocess::monitor()
     // if log is specified, open the log file
     if(this->m_log_path != ""){
         log_file.open(this->m_log_path); 
+        log_file.close();
     }
     while (this->m_monitor_flag) {
         DWORD exitCode;
@@ -129,18 +130,18 @@ void Subprocess::monitor()
         DWORD dwRead;
         while (ReadFile(this->m_hRead, buffer, sizeof(buffer) - 1, &dwRead, NULL) && dwRead != 0) {
             buffer[dwRead] = '\0';
+            std::string out_str = std::string(buffer);
             // add current buffer to output stream
-            this->m_output.push_back(std::string(buffer));
+            this->m_output.push_back(out_str);
             // if log is specified, write to log file
             if(this->m_log_path != ""){
+                out_str.pop_back();
+                log_file.open(this->m_log_path,std::ios::app);
                 log_file << std::string(buffer);
+                log_file.close();
             }
         }
         Sleep(100); // Adjust the sleep interval as needed
-    }
-    // If log is specified, close the log file
-    if(this->m_log_path != ""){
-        log_file.close();
     }
     auto end = clock();
     this->m_duration = double(this->m_start_time - end)/CLOCKS_PER_SEC ;
