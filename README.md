@@ -4,33 +4,31 @@ The subprocess_manager library provides a simple and convenient way to manage su
 ### Example Subprocess
 ```cpp
 #include <subprocess_manager.h>
-
+using namespace subprocess_manager;
 int main() {
   // Create a subprocess
-  subprocess_manager::Subprocess subprocess("my_command", "/path/to/working/directory","/path/to/log/file");
+  Subprocess subprocess("my_subprocess","my_command", "/path/to/working/directory","/path/to/log/file");
 
   // Start the subprocess
   subprocess.start_async();
 
   // Wait for the subprocess to complete or do something else
-  while(subprocess.m_active);
+  while(subprocess.m_state == Subprocess_Completed);
 
   // Get the return code and output from the subprocess
   std::cout << "Return code : " << subprocess.m_return_code << std::endl;
-  std::cout << "Output      : " << std::endl;
-  for(std::string line:subprocess.m_output){
-    std::cout << line << std::endl;
-  }
+  std::cout << "Output      : " << subprocess.m_output_str << std::endl;
+  
   return 0;
 }
 ```
 ### Example SubprocessManager
 ```cpp
 #include <subprocess_manager.h>
-
+using namespace subprocess_manager;
 int main() {
   // Create a subprocess manager
-  subprocess_manager::SubprocessManager manager;
+  SubprocessManager manager;
 
   // Add a subprocess to the manager
   // add(name, cmd, working_directory="", log_file_path="")
@@ -43,7 +41,7 @@ int main() {
   manager.start_async();
 
   // Wait for the subprocesses to complete or do something else
-  while(manager.m_active);
+  while(manager.m_state == Subprocess_Completed);
 
   // Get the return code and output from the subprocesses
   std::cout << "my_subprocess1 (return code) : " << manager["my_subprocess1"]->m_return_code << std::endl;
@@ -69,11 +67,19 @@ The subprocess_manager library provides the following classes and functions:
 - **SubprocessManager**: Manages a collection of subprocesses.
 - **add(name, command, curr_directory)**: Adds a new subprocess to the manager.
 - **add(name, Subprocess\*)**: Adds an existing subprocess to the manager.
+- **find(name)**: Finds a subprocess by name.
 - **start()**: Starts all of the subprocesses in the manager.
 - **start_async()**: Starts all of the subprocesses in the manager asynchronously.
 - **operator[]**: Returns a reference to the subprocess with the given name.
 - **terminate**: Terminates all of the subprocesses in the manager.
 - **join**: Waits for all of the subprocesses in the manager to complete.
+
+#### Enum:Subprocess_
+ - **Subprocess_NotStart** : The subprocess has not been started.
+ - **Subprocess_Started** : The subprocess has been started.
+ - **Subprocess_InProgress** : The subprocess is currently running.
+ - **Subprocess_Completed** : The subprocess has completed.
+ - **Subprocess_Terminated** : The subprocess has been terminated.
 
 ## External Libraries
 The subprocess_manager library relies on the following external libraries:
