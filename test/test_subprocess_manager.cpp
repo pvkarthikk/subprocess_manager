@@ -32,29 +32,32 @@ UTEST(Task, Task)
     }
     EXPECT_EQ(0, 0);
 }
+std::string task_name = "TestName";
 std::string task_cmd = std::format("{0} --filter=Task.Task",get_exe_path());
 UTEST(Subprocess, SingleProcess)
 {
-    Subprocess *process1 = new Subprocess(task_cmd);
+    Subprocess *process1 = new Subprocess(task_name,task_cmd);
     process1->start();
     EXPECT_EQ(process1->m_return_code, 0);
     delete process1;
 }
 UTEST(Subprocess, SingleProcessWithLog)
 {
-    Subprocess *process1 = new Subprocess(task_cmd,"","log.txt");
+    Subprocess *process1 = new Subprocess(task_name,task_cmd,"","log.txt");
     process1->start();
     EXPECT_EQ(process1->m_return_code, 0);
     delete process1;
 }
 UTEST(Subprocess, TwoProcess)
 {
-    Subprocess *process1 = new Subprocess(task_cmd);
-    Subprocess *process2 = new Subprocess(task_cmd);
+    Subprocess *process1 = new Subprocess(task_name, task_cmd);
+    Subprocess *process2 = new Subprocess(task_name, task_cmd);
     process1->start_async();
     process2->start_async();
     while(true){
-        if(!process1->m_active && !process2->m_active){
+        bool process1_active = process1->m_state == Subprocess_Completed;
+        bool process2_active = process2->m_state == Subprocess_Completed;
+        if(!process1_active && !process2_active){
             break;
         }
         Sleep(100);
@@ -67,7 +70,7 @@ UTEST(Subprocess, TwoProcess)
 
 UTEST(Subprocess, InvalidTaskPath)
 {
-    Subprocess *process1 = new Subprocess("invalidname.exe 1 100 1");
+    Subprocess *process1 = new Subprocess(task_name, "invalidname.exe 1 100 1");
     EXPECT_EXCEPTION({process1->start();},std::runtime_error);
 }
 

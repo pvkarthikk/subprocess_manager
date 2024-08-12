@@ -10,6 +10,7 @@ int main() {
   Subprocess subprocess("my_subprocess","my_command", "/path/to/working/directory","/path/to/log/file");
 
   // Start the subprocess
+  // subprocess.start(); // block until all subprocesses are done
   subprocess.start_async();
 
   // Wait for the subprocess to complete or do something else
@@ -18,6 +19,8 @@ int main() {
   // Get the return code and output from the subprocess
   std::cout << "Return code : " << subprocess.m_return_code << std::endl;
   std::cout << "Output      : " << subprocess.m_output_str << std::endl;
+  std::cout << "Duration    : " << subprocess.m_duration << std::endl;
+  std::cout << "Process Id  : " << subprocess.m_process_id << std::endl;
   
   return 0;
 }
