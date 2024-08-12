@@ -162,10 +162,8 @@ void Subprocess::join(){
     }
 }
 void Subprocess::terminate(){
+    this->join();
     if(this->p_monitor_thread != nullptr){
-        if(this->p_monitor_thread->joinable()){
-            this->p_monitor_thread->join();
-        }
         delete this->p_monitor_thread;
         this->p_monitor_thread = nullptr;
     }
@@ -196,7 +194,7 @@ int SubprocessManager::find(std::string name){
     }
     return -1;
 }
-void SubprocessManager::add(std::string name, Subprocess* process)
+void SubprocessManager::add(Subprocess* process)
 {
     if(this->find(name) != -1){
         throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
@@ -262,12 +260,8 @@ void SubprocessManager::join(){
     }
 }
 void SubprocessManager::terminate(){
-    this->m_monitor_flag = false;
     this->join();
     if(this->p_monitor_thread != nullptr){
-        if(this->p_monitor_thread->joinable()){
-            this->p_monitor_thread->join();
-        }
         delete this->p_monitor_thread;
         this->p_monitor_thread = nullptr;
     }

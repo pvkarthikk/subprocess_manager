@@ -54,9 +54,9 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             void                                        monitor();          // Function to monitor subprocesses
             void                                        execute();          // Function to execute subprocesses
         public:
-            std::vector<Subprocess*>                    m_processes;        
-            Subprocess_                                 m_state;
-            int                                         find(std::string name);
+            std::vector<Subprocess*>                    m_processes;        // Vector to store subprocesses
+            Subprocess_                                 m_state;    // State of the manager
+            int                                         find(std::string name); // Find a subprocess by name
             void                                        start();            // Function to start the manager and its subprocesses
             void                                        start_async();      // Function to start the manager and its subprocesses asynchronously
             void                                        terminate();        // Function to terminate all subprocesses
