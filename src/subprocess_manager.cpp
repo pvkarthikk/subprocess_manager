@@ -196,7 +196,10 @@ int SubprocessManager::find(std::string name){
 }
 void SubprocessManager::add(Subprocess* process)
 {
-    if(this->find(name) != -1){
+    if(process == nullptr){
+        throw std::runtime_error("Given process is 'NULL'");
+    }
+    if(this->find(process->m_name) != -1){
         throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
     }
     this->m_processes.push_back(process);
