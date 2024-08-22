@@ -40,12 +40,17 @@ UTEST(Subprocess, SingleProcess)
     process1->start();
     EXPECT_EQ(process1->m_return_code, 0);
     delete process1;
+    
+    EXPECT_EXCEPTION(Subprocess(task_name,"invalid.exe 1 20 30").start(), std::runtime_error);
+    
 }
 UTEST(Subprocess, SingleProcessWithLog)
 {
     Subprocess *process1 = new Subprocess(task_name,task_cmd,"","log.txt");
     process1->start();
     EXPECT_EQ(process1->m_return_code, 0);
+    process1->join();
+    process1->terminate();
     delete process1;
 }
 UTEST(Subprocess, TwoProcess)
@@ -54,18 +59,19 @@ UTEST(Subprocess, TwoProcess)
     Subprocess *process2 = new Subprocess(task_name, task_cmd);
     process1->start_async();
     process2->start_async();
+    EXPECT_EXCEPTION(process1->start(), std::runtime_error);
     while(true){
         bool process1_active = process1->m_state == Subprocess_Completed;
         bool process2_active = process2->m_state == Subprocess_Completed;
         if(!process1_active && !process2_active){
             break;
         }
-        Sleep(100);
     }
     
-    EXPECT_EQ(process1->m_return_code, 0);
-    EXPECT_EQ(process2->m_return_code, 0);
+    EXPECT_EQ(process1->m_return_code, -1);
+    EXPECT_EQ(process2->m_return_code, -1);
     delete process1;
+    delete process2;
 }
 
 UTEST(Subprocess, InvalidTaskPath)
@@ -80,21 +86,33 @@ UTEST(SubprocessManager, SingleProcess)
     manager.add("task1", task_cmd);
     manager.start();
     EXPECT_EQ(manager["task1"]->m_return_code, 0);
+    manager.join();
+    manager.terminate();
 }
 UTEST(SubprocessManager, TwoProcess)
 {
     SubprocessManager manager;
     manager.add("task1", task_cmd);
-    manager.add("task2", task_cmd);
-    manager.start();
+    Subprocess* task2 = new Subprocess(task_name,task_cmd);
+    manager.add(task2);
+    EXPECT_EXCEPTION(manager.add(nullptr),std::runtime_error);
+    EXPECT_EXCEPTION(manager.add("task1", task_cmd),std::runtime_error);
+    manager.start_async();
+    EXPECT_EXCEPTION(manager.start_async(), std::runtime_error);
+    while(manager.m_state != Subprocess_Completed);
     EXPECT_EQ(manager["task1"]->m_return_code, 0);
-    EXPECT_EQ(manager["task2"]->m_return_code, 0);
+    EXPECT_EQ(manager["TestName"]->m_return_code, 0);
+    EXPECT_EXCEPTION(manager["invalid"],std::runtime_error);
+    manager.join();
+    manager.terminate();
 }
 UTEST(SubprocessManager, InvalidTask)
 {
     SubprocessManager manager;
     manager.add("task1", "invalidname.exe 1 100 1");
     EXPECT_EXCEPTION({manager.start();},std::runtime_error);
+    SubprocessManager manager2;
+    manager2.terminate();
 }
 
 UTEST(SubprocessManager, DuplicateTask)

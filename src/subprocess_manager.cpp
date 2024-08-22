@@ -40,10 +40,10 @@ void Subprocess::start(){
 void Subprocess::start_async(){
     this->execute();
     // initiate monitor thread to monitor the process
-    this->p_monitor_thread = new std::jthread(std::bind(&Subprocess::monitor, this));
+    this->p_monitor_thread = new std::thread(std::bind(&Subprocess::monitor, this));
 }
 void Subprocess::execute(){
-    if(this->m_state == Subprocess_Started){
+    if(this->m_state != Subprocess_NotStarted){
         throw std::runtime_error(std::format("'{0}' already running",this->m_command));
     }
     this->m_state = Subprocess_Started;
@@ -225,10 +225,10 @@ void SubprocessManager::start(){
 }
 void SubprocessManager::start_async(){
     this->execute();
-    this->p_monitor_thread = new std::jthread(std::bind(&SubprocessManager::monitor, this));
+    this->p_monitor_thread = new std::thread(std::bind(&SubprocessManager::monitor, this));
 }
 void SubprocessManager::execute(){
-    if(this->m_state == Subprocess_Started){
+    if(this->m_state != Subprocess_NotStarted){
         throw std::runtime_error("Manager already started");
     }
     this->m_state = Subprocess_Started;

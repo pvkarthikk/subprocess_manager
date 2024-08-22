@@ -22,7 +22,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             PROCESS_INFORMATION                         m_pi;               // Process information (ID, handles)
             HANDLE                                      m_hRead;            // Read handle for the process's output
             HANDLE                                      m_hWrite;           // Write handle for the process's input
-            std::jthread*                               p_monitor_thread;   // Pointer to the monitoring thread
+            std::thread*                               p_monitor_thread;   // Pointer to the monitoring thread
             clock_t                                     m_start_time;       // Start time of the process
             // apis
             void                                        monitor();          // Function to monitor process output
@@ -50,7 +50,7 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
 
     class SubprocessManager {
         private:
-            std::jthread*                               p_monitor_thread;   // Pointer to the monitoring thread
+            std::thread*                               p_monitor_thread;   // Pointer to the monitoring thread
             void                                        monitor();          // Function to monitor subprocesses
             void                                        execute();          // Function to execute subprocesses
         public:

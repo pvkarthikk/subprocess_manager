@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
 # c/c++ standard
 set(CMAKE_CXX_STANDARD 20)
+# Set coverage flag
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -coverage")
 # project name
 project(subprocess_manager)
 # library
@@ -19,10 +21,7 @@ target_include_directories(unittest PRIVATE
 )
 target_link_libraries(unittest subprocess_manager
 )
+include(CTest)
+add_test(NAME Subprocess COMMAND unittest)
 
-# enable testing functionality
-#enable_testing()
-
-#add_test(NAME Subprocess COMMAND unittest --filter=Subprocess.*)
-#add_test(NAME SubprocessManager COMMAND unittest --filter=SubprocessManager.*)
 
