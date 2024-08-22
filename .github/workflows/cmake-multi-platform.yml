@@ -28,11 +28,11 @@ jobs:
         c_compiler: [gcc, clang, cl]
         include:
           - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
+            c_compiler: gcc
+            cpp_compiler: g++
         exclude:
           - os: windows-latest
-            c_compiler: gcc
+            c_compiler: cl
           - os: windows-latest
             c_compiler: clang
 
