@@ -9,7 +9,6 @@ std::map<std::string, std::string> GetEnvironmentMap() {
     std::map<std::string, std::string> envMap;
     LPCH envStrings = GetEnvironmentStrings();
     if (envStrings == nullptr) {
-        std::cerr << "Failed to get environment strings." << std::endl;
         return envMap;
     }
 
@@ -61,13 +60,7 @@ Subprocess::~Subprocess(){
     CloseHandle(this->m_pi.hThread);
     CloseHandle(this->m_hRead);
     CloseHandle(this->m_hWrite);
-    if(this->p_monitor_thread != nullptr){
-        if(this->p_monitor_thread->joinable()){
-            this->p_monitor_thread->join();
-        }
-        delete this->p_monitor_thread;
-        this->p_monitor_thread = nullptr;
-    }
+    this->terminate();
 }
 Subprocess* Subprocess::start(){
     this->execute();
@@ -221,13 +214,7 @@ SubprocessManager::~SubprocessManager(){
     for(Subprocess *process:this->m_processes){
         delete process;
     }
-    if(this->p_monitor_thread != nullptr){
-        if(this->p_monitor_thread->joinable()){
-            this->p_monitor_thread->join();
-        }
-        delete this->p_monitor_thread;
-        this->p_monitor_thread = nullptr;
-    }
+    this->terminate();
 }
 int SubprocessManager::find(std::string name){
     for(int i=0;i<this->m_processes.size();i++){
@@ -248,13 +235,13 @@ SubprocessManager* SubprocessManager::add(Subprocess* process)
     this->m_processes.push_back(process);
     return this;
 }
-SubprocessManager* SubprocessManager::add(std::string name, std::string command, std::string curr_directory, std::string log_path)
+SubprocessManager* SubprocessManager::add(std::string name, std::string command, std::string curr_directory, std::string log_path,std::map<std::string,std::string> env_var)
 {
     if(this->find(name) != -1){
         throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
     }
     
-    this->m_processes.push_back(new Subprocess(name,command,curr_directory,log_path));
+    this->m_processes.push_back(new Subprocess(name,command,curr_directory,log_path,env_var));
     return this;
 }
 Subprocess* SubprocessManager::operator[](std::string name){
