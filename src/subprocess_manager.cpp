@@ -4,7 +4,41 @@
 #include <iostream>
 #include <fstream>
 using namespace subprocess_manager;
-Subprocess::Subprocess(std::string name, std::string command, std::string curr_directory, std::string log_path)
+
+std::map<std::string, std::string> GetEnvironmentMap() {
+    std::map<std::string, std::string> envMap;
+    LPCH envStrings = GetEnvironmentStrings();
+    if (envStrings == nullptr) {
+        std::cerr << "Failed to get environment strings." << std::endl;
+        return envMap;
+    }
+
+    LPCH envVar = envStrings;
+    while (*envVar) {
+        std::string envEntry(envVar);
+        size_t pos = envEntry.find('=');
+        if (pos != std::string::npos) {
+            std::string key = envEntry.substr(0, pos);
+            std::string value = envEntry.substr(pos + 1);
+            envMap[key] = value;
+        }
+        envVar += lstrlen(envVar) + 1;
+    }
+
+    FreeEnvironmentStrings(envStrings);
+    return envMap;
+}
+std::string ConvertMapToString(std::map<std::string,std::string> envMap){
+    // Convert the environment map to a single block
+    std::string envBlock;
+    for (const auto& pair : envMap) {
+        envBlock += pair.first + "=" + pair.second + '\0';
+    }
+    envBlock += '\0'; // Double null-terminate the block
+    return envBlock;
+}
+Subprocess::Subprocess(std::string name, std::string command, std::string curr_directory, std::string log_path,
+                       std::map<std::string,std::string> env_var)
 {
     this->m_command = command;
     this->m_curr_directory = curr_directory;
@@ -17,6 +51,8 @@ Subprocess::Subprocess(std::string name, std::string command, std::string curr_d
     this->m_name = name;
     this->m_state = Subprocess_NotStarted;
     this->m_duration = 0.0;
+    this->m_env_var = GetEnvironmentMap();
+    this->m_env_var.insert(env_var.begin(), env_var.end());
     ZeroMemory(&this->m_pi, sizeof(this->m_pi));
     ZeroMemory(&this->m_si, sizeof(this->m_si));
 }
@@ -33,14 +69,16 @@ Subprocess::~Subprocess(){
         this->p_monitor_thread = nullptr;
     }
 }
-void Subprocess::start(){
+Subprocess* Subprocess::start(){
     this->execute();
     this->monitor();
+    return this;
 }
-void Subprocess::start_async(){
+Subprocess* Subprocess::start_async(){
     this->execute();
     // initiate monitor thread to monitor the process
     this->p_monitor_thread = new std::thread(std::bind(&Subprocess::monitor, this));
+    return this;
 }
 void Subprocess::execute(){
     if(this->m_state != Subprocess_NotStarted){
@@ -78,6 +116,9 @@ void Subprocess::execute(){
     this->m_si.dwFlags |= STARTF_USESTDHANDLES;
     this->m_si.wShowWindow = SW_HIDE;
     this->m_si.hStdOutput = this->m_hWrite;
+    // Convert the environment map to a single block
+    std::string env_str = ConvertMapToString(this->m_env_var);
+    LPVOID lpEnv = (LPVOID)env_str.c_str();
     // Replace with your desired command
     LPSTR lpCmdline = const_cast<char *>(this->m_command.c_str());
     LPSTR lpCurrDir = NULL;
@@ -91,7 +132,7 @@ void Subprocess::execute(){
         NULL,
         TRUE,
         CREATE_NO_WINDOW,
-        NULL,
+        lpEnv,
         lpCurrDir,
         &this->m_si,
         &this->m_pi
@@ -154,20 +195,22 @@ void Subprocess::monitor()
     this->m_duration = double(this->m_start_time - end)/CLOCKS_PER_SEC ;
     this->m_state = Subprocess_Completed;
 }
-void Subprocess::join(){
+Subprocess* Subprocess::join(){
     if(this->p_monitor_thread != nullptr){
         if(this->p_monitor_thread->joinable()){
             this->p_monitor_thread->join();
         }
     }
+    return this;
 }
-void Subprocess::terminate(){
+Subprocess* Subprocess::terminate(){
     this->join();
     if(this->p_monitor_thread != nullptr){
         delete this->p_monitor_thread;
         this->p_monitor_thread = nullptr;
     }
     this->m_state = Subprocess_Terminated;
+    return this;
 }
 SubprocessManager::SubprocessManager(){
     this->m_state = Subprocess_NotStarted;
@@ -194,7 +237,7 @@ int SubprocessManager::find(std::string name){
     }
     return -1;
 }
-void SubprocessManager::add(Subprocess* process)
+SubprocessManager* SubprocessManager::add(Subprocess* process)
 {
     if(process == nullptr){
         throw std::runtime_error("Given process is 'NULL'");
@@ -203,14 +246,16 @@ void SubprocessManager::add(Subprocess* process)
         throw std::runtime_error(std::format("Duplicate task found('{0}')",process->m_name));
     }
     this->m_processes.push_back(process);
+    return this;
 }
-void SubprocessManager::add(std::string name, std::string command, std::string curr_directory, std::string log_path)
+SubprocessManager* SubprocessManager::add(std::string name, std::string command, std::string curr_directory, std::string log_path)
 {
     if(this->find(name) != -1){
         throw std::runtime_error(std::format("Duplicate task found('{0}')",name));
     }
     
     this->m_processes.push_back(new Subprocess(name,command,curr_directory,log_path));
+    return this;
 }
 Subprocess* SubprocessManager::operator[](std::string name){
     int found_idx = this->find(name);
@@ -219,13 +264,15 @@ Subprocess* SubprocessManager::operator[](std::string name){
     }
     return this->m_processes[found_idx];
 }
-void SubprocessManager::start(){
+SubprocessManager* SubprocessManager::start(){
     this->execute();
     this->monitor();
+    return this;
 }
-void SubprocessManager::start_async(){
+SubprocessManager* SubprocessManager::start_async(){
     this->execute();
     this->p_monitor_thread = new std::thread(std::bind(&SubprocessManager::monitor, this));
+    return this;
 }
 void SubprocessManager::execute(){
     if(this->m_state != Subprocess_NotStarted){
@@ -252,7 +299,7 @@ void SubprocessManager::monitor(){
     }
     this->m_state = Subprocess_Completed;
 }
-void SubprocessManager::join(){
+SubprocessManager* SubprocessManager::join(){
     for(Subprocess *process:this->m_processes){
         process->join();
     }
@@ -261,12 +308,14 @@ void SubprocessManager::join(){
             this->p_monitor_thread->join();
         }
     }
+    return this;
 }
-void SubprocessManager::terminate(){
+SubprocessManager* SubprocessManager::terminate(){
     this->join();
     if(this->p_monitor_thread != nullptr){
         delete this->p_monitor_thread;
         this->p_monitor_thread = nullptr;
     }
     this->m_state = Subprocess_Terminated;
+    return this;
 }

@@ -6,7 +6,7 @@
 #include <thread>               // For multithreading
 #include <unordered_map>        // For efficient key-value storage
 #include <ctime>                // For time-related operations
-
+#include <map>
 namespace subprocess_manager {  // Namespace to encapsulate subprocess management functionality
     enum Subprocess_{
         Subprocess_NotStarted,
@@ -22,8 +22,9 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             PROCESS_INFORMATION                         m_pi;               // Process information (ID, handles)
             HANDLE                                      m_hRead;            // Read handle for the process's output
             HANDLE                                      m_hWrite;           // Write handle for the process's input
-            std::thread*                               p_monitor_thread;   // Pointer to the monitoring thread
+            std::thread*                                p_monitor_thread;   // Pointer to the monitoring thread
             clock_t                                     m_start_time;       // Start time of the process
+            std::map<std::string,std::string>           m_env_var;          // Environment variables for the process
             // apis
             void                                        monitor();          // Function to monitor process output
             void                                        execute();          // Function to execute process
@@ -40,33 +41,38 @@ namespace subprocess_manager {  // Namespace to encapsulate subprocess managemen
             int                                         m_return_code;      // Return code of the process
             Subprocess_                                 m_state;            // State of the process
             // apis
-            void                                        start();            // Function to start the process
-            void                                        start_async();      // Function to start the process asynchronosly
-            void                                        terminate();        // Function to terminate the process
-            void                                        join();             // Function to join the monitoring thread
-            Subprocess(std::string name, std::string command, std::string curr_directory="", std::string log_path="");    // Constructor
+            Subprocess*                                 start();            // Function to start the process
+            Subprocess*                                 start_async();      // Function to start the process asynchronosly
+            Subprocess*                                 terminate();        // Function to terminate the process
+            Subprocess*                                 join();             // Function to join the monitoring thread
+            Subprocess( std::string name,
+                        std::string command,
+                        std::string curr_directory="",
+                        std::string log_path="",
+                        std::map<std::string,std::string> env_var={{}});    // Constructor
             ~Subprocess();                                                  // Destructor
     };
 
     class SubprocessManager {
         private:
-            std::thread*                               p_monitor_thread;   // Pointer to the monitoring thread
+            std::thread*                                p_monitor_thread;   // Pointer to the monitoring thread
             void                                        monitor();          // Function to monitor subprocesses
             void                                        execute();          // Function to execute subprocesses
         public:
             std::vector<Subprocess*>                    m_processes;        // Vector to store subprocesses
             Subprocess_                                 m_state;    // State of the manager
             int                                         find(std::string name); // Find a subprocess by name
-            void                                        start();            // Function to start the manager and its subprocesses
-            void                                        start_async();      // Function to start the manager and its subprocesses asynchronously
-            void                                        terminate();        // Function to terminate all subprocesses
-            void                                        join();             // Function to join the monitoring thread
+            SubprocessManager*                          start();            // Function to start the manager and its subprocesses
+            SubprocessManager*                          start_async();      // Function to start the manager and its subprocesses asynchronously
+            SubprocessManager*                          terminate();        // Function to terminate all subprocesses
+            SubprocessManager*                          join();             // Function to join the monitoring thread
             Subprocess*                                 operator[](std::string name); // Access a subprocess by name
-            void                                        add(Subprocess* process); // Add a subprocess
-            void                                        add(std::string name,
+            SubprocessManager*                          add(Subprocess* process); // Add a subprocess
+            SubprocessManager*                          add(std::string name,
                                                             std::string command,
                                                             std::string curr_directory="",
-                                                            std::string log_path=""); // Add a subprocess
+                                                            std::string log_path="",
+                                                            std::map<std::string,std::string> env_var={{}}); // Add a subprocess
             SubprocessManager();                                            // Constructor
             ~SubprocessManager();                                           // Destructor
     };

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 # c/c++ standard
 set(CMAKE_CXX_STANDARD 20)
 # Set coverage flag
@@ -20,6 +20,9 @@ target_include_directories(unittest PRIVATE
     include
 )
 target_link_libraries(unittest subprocess_manager
+)
+add_executable(task
+    test/task.cpp
 )
 include(CTest)
 add_test(NAME Subprocess COMMAND unittest)

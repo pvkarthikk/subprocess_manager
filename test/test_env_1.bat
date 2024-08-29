@@ -1,0 +1,1 @@
+@echo %ENV1_VAR%
