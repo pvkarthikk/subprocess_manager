@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <subprocess_manager.h>
 #include <format>
+#include <filesystem>
 #include <iostream>
 #include "utest.h"
 using namespace std;
