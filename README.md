@@ -7,7 +7,7 @@ The subprocess_manager library provides a simple and convenient way to manage su
 using namespace subprocess_manager;
 int main() {
   // Create a subprocess
-  Subprocess subprocess("my_subprocess","my_command", "/path/to/working/directory","/path/to/log/file");
+  Subprocess subprocess("my_subprocess","my_command", "/path/to/working/directory","/path/to/log/file",{{"env_var","value"}});
 
   // Start the subprocess
   // subprocess.start(); // block until all subprocesses are done
@@ -35,9 +35,10 @@ int main() {
 
   // Add a subprocess to the manager
   // add(name, cmd, working_directory="", log_file_path="")
-  manager.add("my_subprocess1", "my_command1", "/path/to/working/directory","/path/to/log/file");
-  manager.add("my_subprocess2", "my_command2", "/path/to/working/directory"); 
-  manager.add("my_subprocess3", "my_command3"); 
+  manager.add("my_subprocess1", "my_command1", "/path/to/working/directory","/path/to/log/file",{{"env_var","value"}});
+  manager.add("my_subprocess2", "my_command1", "/path/to/working/directory","/path/to/log/file");
+  manager.add("my_subprocess3", "my_command2", "/path/to/working/directory"); 
+  manager.add("my_subprocess4", "my_command3"); 
 
   // Start the subprocesses
   // manager.start(); // block until all subprocesses are done
