@@ -148,7 +148,7 @@ void Subprocess::monitor()
     std::ofstream log_file;
     // if log is specified, open the log file
     if(this->m_log_path != ""){
-        log_file.open(this->m_log_path); 
+        log_file.open(this->m_log_path, std::ios::app); 
     }
     while (this->m_state == Subprocess_InProgress) {
         DWORD exitCode;
